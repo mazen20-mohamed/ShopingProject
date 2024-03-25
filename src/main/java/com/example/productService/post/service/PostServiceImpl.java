@@ -102,7 +102,7 @@ public class PostServiceImpl implements PostService {
 
         Shop shop = shopService.getShopByIdOptional(shopId);
 
-        if(postRequest.getImgsAndVideosOfPost().getFirst().isEmpty()) {
+        if(postRequest.getImgsAndVideosOfPost().get(0).isEmpty()) {
             logger.info("There is no images or videos uploaded");
             throw new BadRequestResponseException("There is no images or videos uploaded");
         }
