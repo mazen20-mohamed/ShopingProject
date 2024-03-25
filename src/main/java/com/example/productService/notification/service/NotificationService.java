@@ -52,7 +52,6 @@ public class NotificationService {
         managerNotificationRepository.save(managerNotification);
     }
 
-
     /*
         the user has created a mention for userId
     */

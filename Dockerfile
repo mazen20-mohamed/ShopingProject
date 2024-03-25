@@ -1,18 +1,16 @@
-FROM ubuntu:latest
-
-FROM adoptopenjdk/openjdk21:alpine-jre
+FROM maven:3-openjdk-17 As build
 
 # Set the working directory in the container
-WORKDIR /app
+COPY . .
 
-# Copy the packaged JAR file into the container
-COPY target/productService.jar /app/productService.jar
+RUN mvn clean package -DskipTests
+
+FROM openjdk:17.0.1-jdk-slim
+
+COPY --from=build /target/productService-0.0.1-SNAPSHOT.jar demo.jar
 
 # Expose the port that the Spring Boot application will run on
 EXPOSE 8080
-
-# Set environment variables
-ENV SPRING_PROFILES_ACTIVE=production
 
 # Command to run the Spring Boot application when the container starts
 CMD ["java", "-jar", "productService.jar"]
