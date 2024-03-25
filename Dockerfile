@@ -1,6 +1,5 @@
-FROM maven:3-openjdk-17 As build
+FROM maven:3-openjdk-21 As build
 
-# Set the working directory in the container
 COPY . .
 
 RUN mvn clean package -DskipTests
