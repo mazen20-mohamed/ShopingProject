@@ -1,10 +1,9 @@
 package com.example.productService.post.dto;
-
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 
 @Builder
@@ -12,6 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 public class PostRequest {
     private String description;
-    private List<MultipartFile> multipartFiles;
-
+    @NotEmpty(message = " must not be null")
+    private List<MultipartFile> imgsAndVideosOfPost;
 }

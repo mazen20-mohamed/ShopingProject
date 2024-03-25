@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.core.io.Resource;
+
 import java.util.List;
 
 @Data
@@ -15,8 +17,9 @@ public class ShopResponse {
     private String name;
     private String category;
     private String description;
-    private List<BranchResponse> branchRequests;
+    private List<Long> branchRequests;
     private int numberOfFollowers;
-    private double rate;
-    private byte[] shopImage;
+    private int numberOfPosts;
+    private double rate; // still not sure
+    private String shopImagePathURL;
 }

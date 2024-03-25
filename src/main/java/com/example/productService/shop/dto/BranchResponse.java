@@ -19,6 +19,5 @@ public class BranchResponse {
     private String government;
     private String country;
     private String location;
-
     private List<String> phones;
 }

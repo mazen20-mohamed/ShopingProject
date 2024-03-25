@@ -1,46 +1,59 @@
 package com.example.productService.users.service;
 
-import com.example.productService.config.JwtService;
 import com.example.productService.exception.NotFoundResponseException;
 import com.example.productService.model.auth.User;
-import com.example.productService.model.shop.Shop;
-import com.example.productService.repository.ShopRepository;
 import com.example.productService.repository.UserRepository;
+import com.example.productService.shop.dto.ShopSearchResponse;
+import com.example.productService.users.dto.UserInfoResponse;
+import com.example.productService.util.ModelMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final JwtService jwtService;
-    private final ShopRepository shopRepository;
 
-    /*
-    * this method get token from the request and extract the email of the user
-    * then checks if he in the system ?
-    * then return the object of the user
-     */
-    public User getUserFromToken(String token){
-        String jwtToken = token.substring(7);
-        String email = jwtService.extractUsername(jwtToken);
-        Optional<User> user = userRepository.findByEmail(email);
-        if(user.isEmpty()){
-            throw  new NotFoundResponseException("The user is unknown try to login again");
-        }
+    public UserInfoResponse getUserData(User user){
+        return ModelMapper.convertUserDTO(user);
+    }
+
+    public User getUserById(Long userId){
+        Optional<User> user = userRepository.findById(userId);
+        if(user.isEmpty())
+            throw new NotFoundResponseException("There is no user with id"+userId);
+
         return user.get();
     }
 
-
-    public void followShop(Long id, String token){
-        User user  = getUserFromToken(token);
-        Optional<Shop> shop = shopRepository.findById(id);
-        if(shop.isEmpty()) {
-            throw new NotFoundResponseException("Shop with id "+ id +"not found");
-        }
-        shop.get().getFollowers().add(user);
-        shopRepository.save(shop.get());
+    public List<UserInfoResponse> getFirstTenUserSearch(String searchName){
+        Pageable pageable = PageRequest.of(0, 10);
+        return userRepository.findFirstTenByNameContaining(searchName,pageable)
+                .stream()
+                .map(ModelMapper::convertUserDTO)
+                .collect(Collectors.toList());
     }
 
+    public List<UserInfoResponse> findAllManagersAreDisabled(){
+        Optional<List<User>> users = userRepository.findAllManagersAndDisabled();
+        if(users.isEmpty())
+            throw new NotFoundResponseException("There are no managers that are disabled");
+        return users.get().stream().map(ModelMapper::convertUserDTO).toList();
+    }
+
+    public void enableManagerToCreateShop(Long managerId){
+        User user = getUserById(managerId);
+        user.setEnabledToCreateShop(true);
+        userRepository.save(user);
+    }
+
+    public boolean isEnabledManagerToCreateShop(User user){
+        return user.isEnabledToCreateShop();
+    }
 }

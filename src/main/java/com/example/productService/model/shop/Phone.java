@@ -14,11 +14,11 @@ import lombok.NoArgsConstructor;
 @Table(name = "phones")
 public class Phone {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String phone;
 
     @ManyToOne
-    @JoinColumn(name = "branchId",referencedColumnName = "id")
+    @JoinColumn(name = "branchId",referencedColumnName = "id",nullable = false)
     private Branch branchPhone;
 }

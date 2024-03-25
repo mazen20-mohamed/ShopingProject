@@ -1,27 +1,33 @@
 package com.example.productService.shop.service;
-
+import com.example.productService.exception.BadRequestResponseException;
 import com.example.productService.exception.NotFoundResponseException;
+import com.example.productService.file.FileStorageService;
+import com.example.productService.model.auth.Role;
 import com.example.productService.model.auth.User;
-import com.example.productService.model.shop.Branch;
-import com.example.productService.model.shop.Phone;
-import com.example.productService.model.shop.Shop;
-import com.example.productService.repository.BranchRepository;
-import com.example.productService.repository.PhoneRepository;
-import com.example.productService.repository.ShopRepository;
+import com.example.productService.model.shop.*;
+import com.example.productService.post.dto.PagedResponse;
+import com.example.productService.repository.shop.*;
 import com.example.productService.shop.dto.BranchRequest;
-import com.example.productService.shop.dto.BranchResponse;
 import com.example.productService.shop.dto.ShopRequest;
 import com.example.productService.shop.dto.ShopResponse;
-import com.example.productService.users.service.UserService;
+import com.example.productService.shop.dto.ShopSearchResponse;
+import com.example.productService.users.dto.UserInfoResponse;
+import com.example.productService.util.ModelMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.nio.file.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,14 +37,27 @@ import java.util.stream.Collectors;
 @Service
 public class ShopServiceImpl implements ShopService {
 
+/************************************* auto wired variables ****************************************************/
     private final ShopRepository shopRepository;
     private final BranchRepository branchRepository;
     private final PhoneRepository phoneRepository;
-    private final UserService userService;
-    public static String IMAGES_SHOP = System.getProperty("user.dir") + "/photos/shop";
+    private final FileStorageService fileStorageService;
 
-    public void addStoreWithBranches(ShopRequest shopRequest, String token) {
-        User user = userService.getUserFromToken(token);
+    public static String IMAGES_SHOP = System.getProperty("user.dir") + "/photos/shop/";
+
+/******************************* functions of shop Service ********************************************/
+    // This creates a store with branches ...
+    // done and tested
+    public Long addStoreWithBranches(ShopRequest shopRequest,User user) {
+
+        if(user.getOwnShop() != null ){
+            throw new BadRequestResponseException("You have shop already with name "+user.getOwnShop().getName());
+        }
+
+        if(!user.isEnabledToCreateShop())
+        {
+            throw new BadRequestResponseException("You can not create shop because you are not enabled from the admin");
+        }
 
         Shop shop = Shop.builder()
                         .name(shopRequest.getName())
@@ -46,7 +65,8 @@ public class ShopServiceImpl implements ShopService {
                         .rate(5.0)
                         .category(shopRequest.getCategory())
                         .description(shopRequest.getDescription())
-                .manager(user)
+                        .manager(user)
+                    .enabled(true)
                 .build();
 
         shop = shopRepository.save(shop);
@@ -61,6 +81,7 @@ public class ShopServiceImpl implements ShopService {
                     .government(i.getGovernment())
                     .location(i.getLocation())
                     .build();
+
             branch = branchRepository.save(branch);
             for (String p : i.getPhones()){
                 Phone phone = Phone.builder()
@@ -70,97 +91,141 @@ public class ShopServiceImpl implements ShopService {
                 phoneRepository.save(phone);
             }
         }
+        return shop.getId();
     }
+    // add photo to current store has been created ...
+    // done and tested
 
     public void addPhotoShop(MultipartFile file,Long id) throws IOException {
         Shop shop = getShopByIdOptional(id);
-        Path fileNameAndPath = Paths.get(IMAGES_SHOP, (shop.getName() + shop.getManager().getEmail()+".png"));
-        shop.setImageName( IMAGES_SHOP + (shop.getName() + shop.getManager().getEmail()+".png"));
+        Path fileNameAndPath = Paths.get(IMAGES_SHOP, shop.getName()+shop.getId()+".png");
+        String fileDownloadUri = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("api/v1/shop/photo/")
+                .path(shop.getName()+shop.getId()+".png")
+                .toUriString();
+
+        shop.setImagePathUrl(fileDownloadUri);
+        shopRepository.save(shop);
         Files.write(fileNameAndPath, file.getBytes());
     }
+    // get photo by link from my server
+    // done and tested
 
-    private ShopResponse ConvertShopDTO(Shop shop) throws IOException {
-//        if(!shop.isApproved()){
-//            return null;
-//        }
+    public ResponseEntity<Resource> getShopPhoto(String fileName, HttpServletRequest request){
+        // Load file as Resource
+        Resource resource = fileStorageService.loadStoredImgAsResource(IMAGES_SHOP,fileName);
 
-        Path fileNameAndPath = Paths.get(shop.getImageName());
-        byte[] imageBytes = null ;
-        if(Files.exists(fileNameAndPath)){
-            imageBytes = Files.readAllBytes(fileNameAndPath);
+        // Try to determine file's content type
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+            throw new BadRequestResponseException("");
         }
 
-        return ShopResponse.builder()
-                .id(shop.getId())
-                .name(shop.getName())
-                .category(shop.getCategory())
-                .description(shop.getDescription())
-                .branchRequests(shop.getBranches().stream()
-                        .map(this::ConvertBranchDTO)
-                        .collect(Collectors.toList()))
-                .numberOfFollowers(shop.getFollowers().size())
-                .rate(shop.getRate())
-                .shopImage(imageBytes)
-                .build();
+        // Fallback to the default content type if type could not be determined
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
 
-    private BranchResponse ConvertBranchDTO(Branch branch){
-        return BranchResponse.builder()
-                .id(branch.getId())
-                .city(branch.getCity())
-                .location(branch.getLocation())
-                .government(branch.getGovernment())
-                .country(branch.getCountry())
-                .building_number(branch.getBuilding_number())
-                .street(branch.getStreet())
-                .phones(branch.getPhoneList().stream()
-                        .map(Phone::getPhone)
-                        .collect(Collectors.toList()))
-                .build();
-    }
-
-    public ShopResponse getShopById(Long id) throws IOException {
+    // get shop by its id
+    // done and tested
+    public ShopResponse getShopById(Long id) {
         Shop shop = getShopByIdOptional(id);
-        return ConvertShopDTO(shop);
+        return ModelMapper.ConvertShopDTO(shop);
     }
 
-    public List<ShopResponse> getShopByCity(String city){
-        Optional<List<Branch>> branch =  branchRepository.findByCity(city);
+    // done and need to be tested
+    public PagedResponse<ShopResponse> getShopByCity(String city, int page, int size){
+        Pageable pageable = PageRequest.of(page,size);
+        Page<Branch> branches =  branchRepository.findByCity(city,pageable);
 
-        return branch.map(branches -> branches.stream().map(
-                        branch1 -> {
-                            try {
-                                return ConvertShopDTO(branch1.getShop());
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }).distinct().filter(Objects::nonNull)
-                .collect(Collectors.toList())).orElse(new ArrayList<>());
-    }
-    public List<ShopResponse> getShopByGovernment(String government){
-        Optional<List<Branch>> branch =  branchRepository.findByGovernment(government);
-        return branch.map(branches -> branches.stream().map(
-                        branch1 -> {
-                            try {
-                                return ConvertShopDTO(branch1.getShop());
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }).distinct().filter(Objects::nonNull)
-                .collect(Collectors.toList())).orElse(new ArrayList<>());
-    }
+        List<ShopResponse> shopResponse = branches.getContent().stream().map(branch -> {
+            return ModelMapper.ConvertShopDTO(branch.getShop());
+        }).distinct().toList();
 
-    public Long getManagerOfShop(Long id){
+        return new PagedResponse<>(shopResponse, branches.getNumber(),
+                branches.getSize(), shopResponse.size(),
+                branches.getTotalPages(), branches.isLast());
+    }
+    // done and need to be tested
+    public PagedResponse<ShopResponse> getShopByGovernment(String government,int page, int size){
+        Pageable pageable = PageRequest.of(page,size);
+        Page<Branch> branches =  branchRepository.findByGovernment(government,pageable);
+
+        List<ShopResponse> shopResponse = branches.getContent().stream().map(branch -> {
+            return ModelMapper.ConvertShopDTO(branch.getShop());
+        }).distinct().toList();
+        return new PagedResponse<>(shopResponse, branches.getNumber(),
+                branches.getSize(), shopResponse.size(),
+                branches.getTotalPages(), branches.isLast());
+    }
+    // done and need to be tested
+    public UserInfoResponse getManagerOfShop(Long id){
         Shop shop = getShopByIdOptional(id);
-        return shop.getManager().getId();
+        return ModelMapper.convertUserDTO(shop.getManager());
     }
 
+    // done and tested
+    public void followShop(User user, Long shopId){
+        Shop shop = getShopByIdOptional(shopId);
+        boolean check = shopRepository.checkIfUserFollowShop(user.getId(),shopId);
+        if(check){
+            throw new BadRequestResponseException("User "+user.getFirstname()+" has been following the shop");
+        }
+
+        shop.getFollowers().add(user);
+        shopRepository.save(shop);
+    }
+
+    public List<ShopSearchResponse> getFirstTenShopSearch(String searchName){
+        Pageable pageable = PageRequest.of(0, 10);
+        return shopRepository.findFirstTenByNameContaining(searchName,pageable)
+                .stream()
+                .map(ModelMapper::convertShopSearchDTO)
+                .collect(Collectors.toList());
+    }
+    public List<ShopResponse> getAllShops(int size, int page){
+        Pageable pageable = PageRequest.of(page,size, Sort.by("createdAt").descending());
+        return shopRepository.findAllShops(pageable).stream().map(ModelMapper::ConvertShopDTO).toList();
+    }
+
+    public List<ShopResponse> getAllDisabled(int size,int page){
+        Pageable pageable = PageRequest.of(page,size, Sort.by("createdAt").descending());
+        return shopRepository.findAllDisabledShops(pageable).stream().map(ModelMapper::ConvertShopDTO).toList();
+    }
+
+    public void disableShop(Long shopId){
+        Shop shop = getShopByIdOptional(shopId);
+        shop.setEnabled(false);
+        shopRepository.save(shop);
+    }
+
+    public void enableShop(Long shopId){
+        Shop shop = getShopByIdOptional(shopId);
+        shop.setEnabled(true);
+        shopRepository.save(shop);
+    }
+
+    public void deleteShop(Long shopId){
+        Shop shop = getShopByIdOptional(shopId);
+        shopRepository.delete(shop);
+    }
+/****************************************** helping functions *****************************************************/
+    // this function is just help me to get shop and checks if id sends is correct
     public Shop getShopByIdOptional(Long id){
         Optional<Shop> shop =  shopRepository.findById(id);
-        if(shop.isEmpty()){
-            throw  new NotFoundResponseException("Shop is not found with "+ id);
+        if(shop.isPresent()){
+            return shop.get();
         }
-
-        return shop.get();
+        throw  new NotFoundResponseException("Shop is not found with "+ id);
     }
+
 }

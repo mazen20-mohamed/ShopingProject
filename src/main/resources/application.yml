@@ -1,16 +1,18 @@
 spring:
+  application:
+    name: AppTesting
   datasource:
-    url: jdbc:mysql://localhost:3306/user
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://dpg-co0b03fsc6pc738qr69g-a.frankfurt-postgres.render.com:5432/shop_testing_yzu1
+    username: shop_testing_yzu1_user
+    password: gevJURknoE9pQsXamLuLkBJ93j5P3GyP
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 application:
   security:

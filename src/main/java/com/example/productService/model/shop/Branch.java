@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +16,7 @@ import java.util.List;
 @Table(name = "branches")
 public class Branch {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private int building_number;
     private String street;
@@ -30,6 +29,6 @@ public class Branch {
     private List<Phone> phoneList  = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY,optional = false)
-    @JoinColumn(name = "shopId",referencedColumnName = "id")
+    @JoinColumn(name = "shopId",referencedColumnName = "id",nullable = false)
     private Shop shop;
 }
