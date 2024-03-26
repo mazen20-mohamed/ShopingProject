@@ -2,9 +2,9 @@ spring:
   application:
     name: AppTesting
   datasource:
-    url: jdbc:postgresql://dpg-co0b03fsc6pc738qr69g-a.frankfurt-postgres.render.com:5432/shop_testing_yzu1
-    username: shop_testing_yzu1_user
-    password: gevJURknoE9pQsXamLuLkBJ93j5P3GyP
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
