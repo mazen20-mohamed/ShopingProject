@@ -12,6 +12,7 @@ import com.example.productService.post.service.PostServiceImpl;
 import com.example.productService.repository.post.CommentRepository;
 import com.example.productService.util.ModelMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,15 +21,15 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CommentService {
     private final CommentRepository commentRepository;
     private final PostServiceImpl postService;
     private final NotificationService notificationService;
-    private final Logger logger = LoggerFactory.getLogger(CommentService.class);
     private Comment getCommentByIdWithCheck(Long commentId){
         Optional<Comment> comment = commentRepository.findById(commentId);
         if(comment.isEmpty()){
-            logger.error("There is no comment with id {}",commentId);
+            log.error("There is no comment with id {}",commentId);
             throw new NotFoundResponseException("There is no comment with id "+commentId);
         }
         return comment.get();

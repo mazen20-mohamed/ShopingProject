@@ -4,6 +4,7 @@ import com.example.productService.exception.NotFoundResponseException;
 import com.example.productService.file.FileStorageService;
 import com.example.productService.model.auth.Role;
 import com.example.productService.model.auth.User;
+import com.example.productService.model.post.Post;
 import com.example.productService.model.shop.*;
 import com.example.productService.post.dto.PagedResponse;
 import com.example.productService.repository.shop.*;
@@ -42,73 +43,77 @@ public class ShopServiceImpl implements ShopService {
     private final BranchRepository branchRepository;
     private final PhoneRepository phoneRepository;
     private final FileStorageService fileStorageService;
-
     public static String IMAGES_SHOP = System.getProperty("user.dir") + "/photos/shop/";
 
 /******************************* functions of shop Service ********************************************/
-    // This creates a store with branches ...
+// This creates a store with branches ...
     // done and tested
-    public Long addStoreWithBranches(ShopRequest shopRequest,User user) {
 
-        if(user.getOwnShop() != null ){
-            throw new BadRequestResponseException("You have shop already with name "+user.getOwnShop().getName());
-        }
+public Long addStoreWithBranches(ShopRequest shopRequest,User user) {
 
-        if(!user.isEnabledToCreateShop())
-        {
-            throw new BadRequestResponseException("You can not create shop because you are not enabled from the admin");
-        }
+    if(user.getOwnShop() != null ){
+        throw new BadRequestResponseException("You have shop already with name "+user.getOwnShop().getName());
+    }
 
-        Shop shop = Shop.builder()
-                        .name(shopRequest.getName())
-                        .numberOfRates(0L)
-                        .rate(5.0)
-                        .category(shopRequest.getCategory())
-                        .description(shopRequest.getDescription())
-                        .manager(user)
-                    .enabled(true)
+    if(!user.isEnabledToCreateShop()) {
+        throw new BadRequestResponseException("You can not create shop because you are not enabled from the admin");
+    }
+
+    Shop shop = Shop.builder()
+            .name(shopRequest.getName())
+            .numberOfRates(0L)
+            .rate(5.0)
+//            .category(shopRequest.getCategory())
+            .description(shopRequest.getDescription())
+            .manager(user)
+            .enabled(true)
+            .build();
+
+    shop = shopRepository.save(shop);
+
+    for (BranchRequest i : shopRequest.getBranchRequests()){
+        Branch branch = Branch.builder()
+                .building_number(i.getBuilding_number())
+                .city(i.getCity())
+                .shop(shop)
+                .street(i.getStreet())
+                .country(i.getCountry())
+                .government(i.getGovernment())
+                .location(i.getLocation())
                 .build();
 
-        shop = shopRepository.save(shop);
-
-        for (BranchRequest i : shopRequest.getBranchRequests()){
-            Branch branch = Branch.builder()
-                    .building_number(i.getBuilding_number())
-                    .city(i.getCity())
-                    .shop(shop)
-                    .street(i.getStreet())
-                    .country(i.getCountry())
-                    .government(i.getGovernment())
-                    .location(i.getLocation())
+        branch = branchRepository.save(branch);
+        for (String p : i.getPhones()){
+            Phone phone = Phone.builder()
+                    .phone(p)
+                    .branchPhone(branch)
                     .build();
-
-            branch = branchRepository.save(branch);
-            for (String p : i.getPhones()){
-                Phone phone = Phone.builder()
-                        .phone(p)
-                        .branchPhone(branch)
-                        .build();
-                phoneRepository.save(phone);
-            }
+            phoneRepository.save(phone);
         }
-        return shop.getId();
     }
+    return shop.getId();
+}
     // add photo to current store has been created ...
     // done and tested
 
     public void addPhotoShop(MultipartFile file,Long id) throws IOException {
         Shop shop = getShopByIdOptional(id);
         Path fileNameAndPath = Paths.get(IMAGES_SHOP, shop.getName()+shop.getId()+".png");
+        Path p = Paths.get(IMAGES_SHOP);
+        if(!Files.exists(p)){
+            Files.createDirectories(p);
+        }
         String fileDownloadUri = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
                 .path("api/v1/shop/photo/")
-                .path(shop.getName()+shop.getId()+".png")
+                .path(shop.getName() + shop.getId() + ".png")
                 .toUriString();
 
         shop.setImagePathUrl(fileDownloadUri);
         shopRepository.save(shop);
         Files.write(fileNameAndPath, file.getBytes());
     }
+
     // get photo by link from my server
     // done and tested
 

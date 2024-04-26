@@ -12,26 +12,22 @@ import com.example.productService.model.shop.Phone;
 import com.example.productService.model.shop.Shop;
 import com.example.productService.notification.dto.NotificationResponse;
 import com.example.productService.post.dto.PostResponse;
-import com.example.productService.post.service.PostServiceImpl;
 import com.example.productService.shop.dto.BranchResponse;
 import com.example.productService.shop.dto.ShopResponse;
 import com.example.productService.shop.dto.ShopSearchResponse;
 import com.example.productService.users.dto.UserInfoResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ModelMapper {
-    private static final Logger logger = LoggerFactory.getLogger(ModelMapper.class);
     public static ShopResponse ConvertShopDTO(Shop shop) {
 
         return ShopResponse.builder()
                 .id(shop.getId())
                 .name(shop.getName())
-                .category(shop.getCategory())
                 .description(shop.getDescription())
                 .branchRequests(shop.getBranches().stream()
                         .map(Branch::getId)

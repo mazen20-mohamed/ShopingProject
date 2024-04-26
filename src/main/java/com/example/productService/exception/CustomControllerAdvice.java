@@ -1,15 +1,15 @@
 package com.example.productService.exception;
 
-
 import jakarta.validation.ValidationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -89,6 +89,21 @@ public class CustomControllerAdvice {
                 status
         );
     }
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(
+            Exception e
+    ) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED; // 401
+
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        status,
+                        "Unauthorized User"
+                ),
+                status
+        );
+    }
+
     @ExceptionHandler(BadRequestResponseException.class)
     public ResponseEntity<ErrorResponse> handleBadRequestResponseException(
             Exception e

@@ -1,5 +1,4 @@
 package com.example.productService.post.dto;
-
 import lombok.*;
 import java.util.List;
 

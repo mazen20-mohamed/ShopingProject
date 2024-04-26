@@ -21,7 +21,6 @@ public class Shop extends DateEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private String category;
     private String description;
     private long numberOfRates;
     private double rate;

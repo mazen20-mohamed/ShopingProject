@@ -5,6 +5,7 @@ import com.example.productService.notification.dto.NotificationRequest;
 import com.example.productService.notification.dto.NotificationResponse;
 import com.example.productService.notification.service.NotificationGenerator;
 import com.example.productService.notification.service.NotificationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "api/v1/notification")
 @RequiredArgsConstructor
+@Tag(name = "Notification")
 public class NotificationController {
     private final NotificationService notificationService;
     private final NotificationGenerator notificationGenerator;

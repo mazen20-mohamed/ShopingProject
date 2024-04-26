@@ -15,7 +15,9 @@ import com.example.productService.shop.service.ShopServiceImpl;
 import com.example.productService.util.ModelMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.NotFound;
+import org.hibernate.validator.constraints.time.DurationMax;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -40,12 +42,12 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final ShopServiceImpl shopService;
     private final FileStorageService fileStorageService;
     private final LikeRepository likeRepository;
-    private static final Logger logger = LoggerFactory.getLogger(PostServiceImpl.class);
     public static String IMAGES_POST = System.getProperty("user.dir") + "/photos/post";
 
     private void createDirectories(Shop shop,Post post) throws IOException {
@@ -65,7 +67,7 @@ public class PostServiceImpl implements PostService {
             File file = new File(String.valueOf(path));
             deleteFilesInDirectory(file);
             boolean deleted = file.delete();
-            logger.info(path+ " deleted "+deleted);
+            log.info(path+ " deleted "+deleted);
         }
     }
     private void deleteFilesInDirectory(File file){
@@ -103,7 +105,7 @@ public class PostServiceImpl implements PostService {
         Shop shop = shopService.getShopByIdOptional(shopId);
 
         if(postRequest.getImgsAndVideosOfPost().get(0).isEmpty()) {
-            logger.info("There is no images or videos uploaded");
+            log.info("There is no images or videos uploaded");
             throw new BadRequestResponseException("There is no images or videos uploaded");
         }
 
@@ -117,7 +119,7 @@ public class PostServiceImpl implements PostService {
 
         post.setImagesAndVideosUrl(saveImagesAndVideos(postRequest,post));
         postRepository.save(post);
-        logger.info("Post id "+post.getId()+" is created in shop Id "+shopId);
+        log.info("Post id "+post.getId()+" is created in shop Id "+shopId);
     }
 
     public PostResponse getPostById(Long id,User user){
@@ -138,7 +140,7 @@ public class PostServiceImpl implements PostService {
         Post post = getPostByIdCheck(postId);
         deleteDirectoriesOfPost(post);
         postRepository.delete(post);
-        logger.info("Post is deleted with id "+postId);
+        log.info("Post is deleted with id "+postId);
     }
 
     public void increaseLike(Long postId, User user) {
@@ -172,13 +174,7 @@ public class PostServiceImpl implements PostService {
         // Load file as Resource
         Resource resource = fileStorageService.loadStoredImgAsResource(path,fileName);
 
-        // Try to determine file's content type
-//        String contentType = "application/octet-stream";
-//
         return ResponseEntity.ok()
-//                .contentType(MediaType.parseMediaType(contentType))
-//                .header(HttpHeaders.CONTENT_DISPOSITION,
-//                        "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
 
@@ -207,6 +203,7 @@ public class PostServiceImpl implements PostService {
 
     public PagedResponse<PostResponse> getAllPostsOfShop(User user,Long shopId , int page, int size){
         Pageable pageable = PageRequest.of(page,size);
+        shopService.getShopByIdOptional(shopId);
         Page<Post> posts = postRepository.getPostsOfShop(shopId,pageable);
 
         List<PostResponse> postResponses = posts.map(

@@ -15,7 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Comment extends DateEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,4 +35,5 @@ public class Comment extends DateEntity {
 
     @OneToMany(mappedBy = "commentParent",cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
+
 }

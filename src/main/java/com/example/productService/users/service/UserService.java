@@ -1,5 +1,6 @@
 package com.example.productService.users.service;
 
+import com.example.productService.config.JwtService;
 import com.example.productService.exception.NotFoundResponseException;
 import com.example.productService.model.auth.User;
 import com.example.productService.repository.UserRepository;
@@ -7,6 +8,7 @@ import com.example.productService.shop.dto.ShopSearchResponse;
 import com.example.productService.users.dto.UserInfoResponse;
 import com.example.productService.util.ModelMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,8 +19,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
     private final UserRepository userRepository;
+    private final JwtService jwtService;
 
     public UserInfoResponse getUserData(User user){
         return ModelMapper.convertUserDTO(user);
@@ -40,10 +44,9 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    // need to check
     public List<UserInfoResponse> findAllManagersAreDisabled(){
         Optional<List<User>> users = userRepository.findAllManagersAndDisabled();
-        if(users.isEmpty())
-            throw new NotFoundResponseException("There are no managers that are disabled");
         return users.get().stream().map(ModelMapper::convertUserDTO).toList();
     }
 
@@ -55,5 +58,11 @@ public class UserService {
 
     public boolean isEnabledManagerToCreateShop(User user){
         return user.isEnabledToCreateShop();
+    }
+
+    public boolean isTokenExpired(String token){
+        String jwt = token.substring(7);
+
+        return jwtService.isTokenExpired(jwt);
     }
 }

@@ -8,10 +8,14 @@ import com.example.productService.exception.NotFoundResponseException;
 import com.example.productService.model.auth.User;
 import com.example.productService.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +26,7 @@ public class AuthenticationService implements AuthenticationServiceInterface{
     private final AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(RegisterRequest request) {
+//        Optional<User> userFound = repository.findByEmail(request.getEmail());
 
         User user = User.builder()
                 .firstname(request.getFirstname())
@@ -30,6 +35,7 @@ public class AuthenticationService implements AuthenticationServiceInterface{
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .build();
+
         repository.save(user);
 
         String jwtToken = jwtService.generateToken(user);
@@ -40,10 +46,11 @@ public class AuthenticationService implements AuthenticationServiceInterface{
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
 
-        User user = repository.findByEmail(request.getEmail()).orElseThrow(null);
-        if(user == null){
-            throw new NotFoundResponseException("No Such a User with this email and password");
+        Optional<User> user = repository.findByEmail(request.getEmail());
+        if(user.isEmpty()){
+            throw new NotFoundResponseException("No Such a User with this email");
         }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -51,13 +58,12 @@ public class AuthenticationService implements AuthenticationServiceInterface{
                 )
         );
 
-        String jwtToken = jwtService.generateToken(user);
+        String jwtToken = jwtService.generateToken(user.get());
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .build();
+
     }
 
-    public boolean isTokenExpired(String token){
-        return jwtService.isTokenExpired(token);
-    }
+
 }
