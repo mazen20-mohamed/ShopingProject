@@ -15,6 +15,7 @@ import com.example.productService.post.dto.PostResponse;
 import com.example.productService.shop.dto.BranchResponse;
 import com.example.productService.shop.dto.ShopResponse;
 import com.example.productService.shop.dto.ShopSearchResponse;
+import com.example.productService.users.dto.ManagerInfo;
 import com.example.productService.users.dto.UserInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class ModelMapper {
                 .numberOfPosts(shop.getPosts().size())
                 .shopImagePathURL(shop.getImagePathUrl())
                 .rate(shop.getRate())
+                .isEnabled(shop.isEnabled())
                 .build();
     }
     public static BranchResponse ConvertBranchDTO(Branch branch){
@@ -129,4 +131,20 @@ public class ModelMapper {
                 .build();
     }
 
+
+    public static ManagerInfo convertManagerDto(User user){
+        if(user.getOwnShop() == null){
+            return ManagerInfo.builder()
+                    .name(user.getFirstname() + " " + user.getLastname())
+                    .email(user.getEmail())
+                    .phoneNumber(user.getPhoneNumber())
+                    .build();
+        }
+        return ManagerInfo.builder()
+                .name(user.getFirstname() + " " + user.getLastname())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .shop_id(user.getOwnShop().getId())
+                .build();
+    }
 }

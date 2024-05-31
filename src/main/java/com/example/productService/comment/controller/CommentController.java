@@ -58,7 +58,9 @@ public class CommentController {
     @Operation(summary = "get Comment by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200 OK",
-                    description = "Everything OK"),
+                    description = "Everything OK",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CommentResponse.class))}),
             @ApiResponse(responseCode = "404 Not Found",
                     description = "comment id is not found",
                     content = {@Content(mediaType = "application/json",
@@ -80,7 +82,9 @@ public class CommentController {
     @Operation(summary = "get all Comment of a post")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200 OK",
-                    description = "Everything OK"),
+                    description = "Everything OK",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(type = "array",implementation = CommentResponse.class))}),
             @ApiResponse(responseCode = "404 Not Found",
                     description = "post id is not found",
                     content = {@Content(mediaType = "application/json",

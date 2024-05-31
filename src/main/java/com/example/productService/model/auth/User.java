@@ -35,6 +35,7 @@ public class User extends DateEntity implements UserDetails {
     @Email
     private String email;
     private String password;
+    private String phoneNumber;
     @Enumerated(EnumType.STRING)
     private Role role;
     private boolean enabledToCreateShop = false;

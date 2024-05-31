@@ -17,4 +17,7 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     @Query("SELECT p from Post p where p.shop.Id = :shopId AND p.shop.enabled = true")
     Page<Post> getPostsOfShop(@Param("shopId")Long shopId,Pageable pageable);
 
+
+    @Query("SELECT p from Post p ORDER BY random()")
+    Page<Post> getRandomPosts(Pageable pageable);
 }

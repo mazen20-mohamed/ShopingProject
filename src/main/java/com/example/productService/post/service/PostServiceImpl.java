@@ -13,20 +13,13 @@ import com.example.productService.repository.post.LikeRepository;
 import com.example.productService.repository.post.PostRepository;
 import com.example.productService.shop.service.ShopServiceImpl;
 import com.example.productService.util.ModelMapper;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.validator.constraints.time.DurationMax;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +27,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.NotActiveException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -212,6 +204,20 @@ public class PostServiceImpl implements PostService {
                 }
         ).stream().toList();
 
+        return new PagedResponse<>(postResponses,posts.getNumber(),
+                posts.getSize(), posts.getTotalElements(),
+                posts.getTotalPages(), posts.isLast());
+    }
+
+
+    public PagedResponse<PostResponse> getRandomPosts(User user,int page,int size){
+        Pageable pageable = PageRequest.of(page,size);
+        Page<Post> posts = postRepository.getRandomPosts(pageable);
+        List<PostResponse> postResponses = posts.map(
+                post -> {
+                    return ModelMapper.convertPostDTO(post,user);
+                }
+        ).stream().toList();
         return new PagedResponse<>(postResponses,posts.getNumber(),
                 posts.getSize(), posts.getTotalElements(),
                 posts.getTotalPages(), posts.isLast());

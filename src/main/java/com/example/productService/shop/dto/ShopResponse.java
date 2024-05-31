@@ -22,4 +22,5 @@ public class ShopResponse {
     private int numberOfPosts;
     private double rate; // still not sure
     private String shopImagePathURL;
+    private boolean isEnabled;
 }

@@ -62,7 +62,9 @@ public class PostController {
     @Operation(summary = "get post by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200 OK",
-                    description = "Everything OK"),
+                    description = "Everything OK",
+            content = {@Content(mediaType = "application/json",
+                    schema = @Schema(implementation = PostResponse.class))}),
             @ApiResponse(responseCode = "404 Not Found",
                     description = "post id is not found",
                     content = {@Content(mediaType = "application/json",
@@ -126,7 +128,9 @@ public class PostController {
     @Operation(summary = "get post images",description = "This endpoint be used with get post by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200 OK",
-                    description = "Everything OK"),
+                    description = "Everything OK",
+            content = {@Content(mediaType = "image/jpeg",
+                    schema =  @Schema(type = "string", format = "binary"))}),
             @ApiResponse(responseCode = "500 Internal Server Error",
                     description = "Error at backend side",
                     content = {@Content(mediaType = "application/json",
@@ -195,7 +199,9 @@ public class PostController {
     @Operation(summary = "get all posts for a user", description = "this used for the timeline page")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200 OK",
-                    description = "Everything OK"),
+                    description = "Everything OK",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PagedResponse.class))}),
             @ApiResponse(responseCode = "500 Internal Server Error",
                     description = "Error at backend side",
                     content = {@Content(mediaType = "application/json",
@@ -212,7 +218,9 @@ public class PostController {
             description = "this used for the get all posts of a shop by shop Id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200 OK",
-                    description = "Everything OK"),
+                    description = "Everything OK",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PagedResponse.class))}),
             @ApiResponse(responseCode = "404 Not Found",
                     description = "shop id is not found",
                     content = {@Content(mediaType = "application/json",
@@ -230,5 +238,28 @@ public class PostController {
                                                          @PathVariable int size,
                                                          @CurrentUser User user) {
         return postService.getAllPostsOfShop(user, shopId ,page,size);
+    }
+    @Operation(summary = "get random posts")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200 OK",
+                    description = "Everything OK",
+            content = {@Content(mediaType = "application/json",
+                    schema = @Schema(implementation = PagedResponse.class))}),
+            @ApiResponse(responseCode = "404 Not Found",
+                    description = "shop id is not found",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))}
+            ),
+            @ApiResponse(responseCode = "500 Internal Server Error",
+                    description = "Error at backend side",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))}
+            )
+    })
+    @GetMapping("random/{page}/{size}")
+    public PagedResponse<PostResponse> getRandomPosts(@CurrentUser User user,
+                                                      @PathVariable  int page,
+                                                      @PathVariable int size){
+        return postService.getRandomPosts(user,page,size);
     }
 }

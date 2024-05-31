@@ -1,7 +1,11 @@
 package com.example.productService.users.controller;
 import com.example.productService.config.CurrentUser;
+import com.example.productService.exception.BadRequestResponseException;
 import com.example.productService.exception.ErrorResponse;
 import com.example.productService.model.auth.User;
+import com.example.productService.post.dto.PagedResponse;
+import com.example.productService.users.dto.ChangePasswordRequest;
+import com.example.productService.users.dto.ManagerInfo;
 import com.example.productService.users.dto.UserInfoResponse;
 import com.example.productService.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,7 +57,7 @@ public class UserController {
         return userService.getFirstTenUserSearch(searchName);
     }
 
-    @GetMapping("/getAllDisabledManagers")
+    @GetMapping("/getAllDisabledManagers/{size}/{page}")
     @Operation(summary = "find all disabled managers",description = "accessed only by admin")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200 OK",
@@ -64,8 +68,8 @@ public class UserController {
                             schema = @Schema(implementation = ErrorResponse.class))}
             )
     })
-    public List<UserInfoResponse> findAllManagersAreDisabled() {
-        return userService.findAllManagersAreDisabled();
+    public PagedResponse<ManagerInfo> findAllManagersAreDisabled(@PathVariable int size,@PathVariable int page) {
+        return userService.findAllManagersAreDisabled(size,page);
     }
 
     @GetMapping("enable/{managerId}")
@@ -115,5 +119,12 @@ public class UserController {
     @GetMapping("/isTokenExpired")
     public boolean isTokenExpired(@RequestHeader("Authorization") String token){
         return userService.isTokenExpired(token);
+    }
+
+    @Operation(summary = "change Password for a user")
+    @PutMapping()
+    @PreAuthorize("hasRole('MANAGER','USER')")
+    public void changePassword(@CurrentUser User user, @RequestBody ChangePasswordRequest changePasswordRequest){
+        userService.changePassword(user,changePasswordRequest);
     }
 }

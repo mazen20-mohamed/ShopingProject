@@ -114,6 +114,7 @@ public class ShopController {
                                                      @PathVariable int size ) {
         return shopService.getShopByCity(city,page,size);
     }
+
     @Operation(summary = "get shop by government name")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200 OK",
@@ -210,7 +211,7 @@ public class ShopController {
                             schema = @Schema(implementation = ErrorResponse.class))}
             )
     })
-    public List<ShopResponse> getAllShops(@PathVariable int size,@PathVariable int page){
+    public PagedResponse<ShopResponse> getAllShops(@PathVariable int size,@PathVariable int page){
         return shopService.getAllShops(size,page);
     }
 
@@ -226,7 +227,7 @@ public class ShopController {
                             schema = @Schema(implementation = ErrorResponse.class))}
             )
     })
-    public List<ShopResponse> getAllDisabled(@PathVariable int size,@PathVariable int page){
+    public PagedResponse<ShopResponse> getAllDisabled(@PathVariable int size,@PathVariable int page){
         return shopService.getAllDisabled(size,page);
     }
 
@@ -250,6 +251,7 @@ public class ShopController {
     public void disableShop(@PathVariable Long shopId){
         shopService.disableShop(shopId);
     }
+
     @PutMapping("enableShop/{shopId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "enable a shop by id",description = "enable a shop. This endpoint is only for admin")

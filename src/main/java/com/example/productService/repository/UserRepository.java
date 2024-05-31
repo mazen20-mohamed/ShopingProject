@@ -25,5 +25,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findFirstTenByNameContaining(String searchTerm , Pageable pageable);
 
     @Query("select u from User u where u.role = ROLE_MANAGER AND enabledToCreateShop = false")
-    Optional<List<User>> findAllManagersAndDisabled();
+    Page<User> findAllManagersAndDisabled(Pageable pageable);
 }

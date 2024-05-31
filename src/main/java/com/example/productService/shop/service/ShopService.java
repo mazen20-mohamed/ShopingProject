@@ -25,8 +25,8 @@ public interface ShopService {
     void enableShop(Long shopId);
     void deleteShop(Long shopId);
     void disableShop(Long shopId);
-    List<ShopResponse> getAllDisabled(int size, int page);
-    List<ShopResponse> getAllShops(int size, int page);
+    PagedResponse<ShopResponse> getAllDisabled(int size, int page);
+    PagedResponse<ShopResponse> getAllShops(int size, int page);
     List<ShopSearchResponse> getFirstTenShopSearch(String searchName);
     void followShop(User user, Long shopId);
     ResponseEntity<Resource> getShopPhoto(String fileName, HttpServletRequest request);

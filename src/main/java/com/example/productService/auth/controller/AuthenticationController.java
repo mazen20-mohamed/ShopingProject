@@ -1,9 +1,9 @@
 package com.example.productService.auth.controller;
 
-import com.example.productService.auth.service.AuthenticationService;
 import com.example.productService.auth.dto.AuthenticationRequest;
 import com.example.productService.auth.dto.AuthenticationResponse;
 import com.example.productService.auth.dto.RegisterRequest;
+import com.example.productService.auth.service.AuthenticationServiceInterface;
 import com.example.productService.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "Authentication")
 public class AuthenticationController {
-    private final AuthenticationService service;
+    private final AuthenticationServiceInterface service;
 
     @PostMapping
     @ApiResponses(value = {
@@ -47,6 +47,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
+
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200 OK",
                     description = "Everything OK"),

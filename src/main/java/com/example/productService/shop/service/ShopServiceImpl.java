@@ -197,14 +197,25 @@ public Long addStoreWithBranches(ShopRequest shopRequest,User user) {
                 .map(ModelMapper::convertShopSearchDTO)
                 .collect(Collectors.toList());
     }
-    public List<ShopResponse> getAllShops(int size, int page){
+
+    public PagedResponse<ShopResponse> getAllShops(int size, int page){
         Pageable pageable = PageRequest.of(page,size, Sort.by("createdAt").descending());
-        return shopRepository.findAllShops(pageable).stream().map(ModelMapper::ConvertShopDTO).toList();
+        Page<Shop> shopResponses = shopRepository.findAllShops(pageable);
+        List<ShopResponse> shopResponseList = shopResponses.getContent()
+                .stream().map(ModelMapper::ConvertShopDTO).toList();
+        return new PagedResponse<>(shopResponseList, shopResponses.getNumber(),
+                shopResponses.getSize(), shopResponseList.size(),
+                shopResponses.getTotalPages(), shopResponses.isLast());
     }
 
-    public List<ShopResponse> getAllDisabled(int size,int page){
+    public PagedResponse<ShopResponse> getAllDisabled(int size,int page){
         Pageable pageable = PageRequest.of(page,size, Sort.by("createdAt").descending());
-        return shopRepository.findAllDisabledShops(pageable).stream().map(ModelMapper::ConvertShopDTO).toList();
+        Page<Shop> shopResponses = shopRepository.findAllDisabledShops(pageable);
+        List<ShopResponse> shopResponseList = shopResponses.getContent().
+                stream().map(ModelMapper::ConvertShopDTO).toList();
+        return new PagedResponse<>(shopResponseList, shopResponses.getNumber(),
+                shopResponses.getSize(), shopResponseList.size(),
+                shopResponses.getTotalPages(), shopResponses.isLast());
     }
 
     public void disableShop(Long shopId){

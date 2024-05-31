@@ -7,6 +7,7 @@ import com.example.productService.exception.BadRequestResponseException;
 import com.example.productService.exception.NotFoundResponseException;
 import com.example.productService.model.auth.User;
 import com.example.productService.repository.UserRepository;
+import com.example.productService.users.dto.ChangePasswordRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -64,6 +65,5 @@ public class AuthenticationService implements AuthenticationServiceInterface{
                 .build();
 
     }
-
 
 }
