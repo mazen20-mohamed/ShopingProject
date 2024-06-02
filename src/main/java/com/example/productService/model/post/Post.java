@@ -1,6 +1,7 @@
 package com.example.productService.model.post;
 
 import com.example.productService.model.DateEntity;
+import com.example.productService.model.auth.User;
 import com.example.productService.model.shop.Shop;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,4 +36,8 @@ public class Post extends DateEntity {
 
     @OneToMany(mappedBy = "post" , cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
+
+
+    @OneToMany(mappedBy = "post" ,  cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    private List<SavedPosts> savedPosts;
 }

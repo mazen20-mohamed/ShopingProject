@@ -209,7 +209,6 @@ public class PostServiceImpl implements PostService {
                 posts.getTotalPages(), posts.isLast());
     }
 
-
     public PagedResponse<PostResponse> getRandomPosts(User user,int page,int size){
         Pageable pageable = PageRequest.of(page,size);
         Page<Post> posts = postRepository.getRandomPosts(pageable);

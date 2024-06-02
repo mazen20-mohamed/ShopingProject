@@ -5,6 +5,8 @@ import com.example.productService.model.notification.ManagerNotification;
 import com.example.productService.model.notification.UserNotification;
 import com.example.productService.model.post.Comment;
 import com.example.productService.model.post.Like;
+import com.example.productService.model.post.Post;
+import com.example.productService.model.post.SavedPosts;
 import com.example.productService.model.shop.Shop;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -44,20 +46,24 @@ public class User extends DateEntity implements UserDetails {
     @OneToOne(mappedBy = "manager")
     private Shop ownShop;
 
-    @ManyToMany(mappedBy = "followers",fetch = FetchType.EAGER)
+    @ManyToMany(mappedBy = "followers",fetch = FetchType.LAZY)
     private List<Shop> shopsFollowing;
 
-    @OneToMany(mappedBy = "user" ,  cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user" ,  cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<Like> likedPosts = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
     private List<UserNotification> userNotifications;
 
-    @OneToMany(mappedBy = "manager")
+    @OneToMany(mappedBy = "manager",fetch = FetchType.LAZY)
     private List<ManagerNotification> managerNotifications;
+
+
+    @OneToMany(mappedBy = "user" ,  cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    private List<SavedPosts> savedPosts;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

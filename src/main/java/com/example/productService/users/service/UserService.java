@@ -4,11 +4,12 @@ import com.example.productService.config.JwtService;
 import com.example.productService.exception.BadRequestResponseException;
 import com.example.productService.exception.NotFoundResponseException;
 import com.example.productService.model.auth.User;
+import com.example.productService.model.post.Post;
 import com.example.productService.post.dto.PagedResponse;
+import com.example.productService.post.dto.PostResponse;
 import com.example.productService.repository.UserRepository;
-import com.example.productService.shop.dto.ShopSearchResponse;
+import com.example.productService.repository.post.SavedPostsRepository;
 import com.example.productService.users.dto.ChangePasswordRequest;
-import com.example.productService.users.dto.ManagerInfo;
 import com.example.productService.users.dto.UserInfoResponse;
 import com.example.productService.util.ModelMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,6 +30,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final SavedPostsRepository savedPostsRepository;
     public UserInfoResponse getUserData(User user){
         return ModelMapper.convertUserDTO(user);
     }
@@ -49,24 +50,6 @@ public class UserService {
                 .map(ModelMapper::convertUserDTO)
                 .collect(Collectors.toList());
     }
-
-    // need to check
-    public PagedResponse<ManagerInfo> findAllManagersAreDisabled(int size,int page){
-        Pageable pageable = PageRequest.of(page,size);
-        Page<User> users = userRepository.findAllManagersAndDisabled(pageable);
-        List<ManagerInfo> managerInfo = users.getContent()
-                .stream().map(ModelMapper::convertManagerDto).toList();
-        return new PagedResponse<>(managerInfo, users.getNumber(),
-                users.getSize(), managerInfo.size(),
-                users.getTotalPages(), users.isLast());
-    }
-
-    public void enableManagerToCreateShop(Long managerId){
-        User user = getUserById(managerId);
-        user.setEnabledToCreateShop(true);
-        userRepository.save(user);
-    }
-
     public boolean isEnabledManagerToCreateShop(User user){
         return user.isEnabledToCreateShop();
     }
@@ -84,4 +67,16 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public PagedResponse<PostResponse> getAllSavedPosts(int page , int size, User user){
+        Pageable pageable = PageRequest.of(page,size);
+        Page<Post> posts = savedPostsRepository.getAllPostsByUser(pageable,user);
+        List<PostResponse> postResponses = posts.getContent()
+                .stream()
+                .map(post-> ModelMapper.convertPostDTO(post,user)).toList();
+        return new PagedResponse<>(
+                postResponses,posts.getNumber(),
+                posts.getSize(),posts.getTotalElements(),
+                posts.getTotalPages(),posts.isLast()
+        );
+    }
 }

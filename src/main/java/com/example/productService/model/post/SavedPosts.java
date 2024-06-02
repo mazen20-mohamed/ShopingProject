@@ -7,13 +7,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "post_user_likes")
-public class Like extends DateEntity {
+public class SavedPosts extends DateEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,7 +22,6 @@ public class Like extends DateEntity {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "post_id" , nullable = false)
+    @JoinColumn(name = "user_id" , nullable = false)
     private Post post;
-
 }

@@ -1,11 +1,10 @@
 package com.example.productService.users.controller;
 import com.example.productService.config.CurrentUser;
-import com.example.productService.exception.BadRequestResponseException;
 import com.example.productService.exception.ErrorResponse;
 import com.example.productService.model.auth.User;
 import com.example.productService.post.dto.PagedResponse;
+import com.example.productService.post.dto.PostResponse;
 import com.example.productService.users.dto.ChangePasswordRequest;
-import com.example.productService.users.dto.ManagerInfo;
 import com.example.productService.users.dto.UserInfoResponse;
 import com.example.productService.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +25,6 @@ import java.util.List;
 @Tag(name = "User Operation")
 public class UserController {
     private final UserService userService;
-
     @GetMapping
     @Operation(summary = "get user information")
     @ApiResponses(value = {
@@ -55,42 +53,6 @@ public class UserController {
     })
     public List<UserInfoResponse> getFirstTenUserSearch(@PathVariable String searchName){
         return userService.getFirstTenUserSearch(searchName);
-    }
-
-    @GetMapping("/getAllDisabledManagers/{size}/{page}")
-    @Operation(summary = "find all disabled managers",description = "accessed only by admin")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200 OK",
-                    description = "Everything OK"),
-            @ApiResponse(responseCode = "500 Internal Server Error",
-                    description = "Error at backend side",
-                    content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class))}
-            )
-    })
-    public PagedResponse<ManagerInfo> findAllManagersAreDisabled(@PathVariable int size,@PathVariable int page) {
-        return userService.findAllManagersAreDisabled(size,page);
-    }
-
-    @GetMapping("enable/{managerId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "enable manager",description = "accessed only by admin")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200 OK",
-                    description = "Everything OK"),
-            @ApiResponse(responseCode = "404 Not Found",
-                    description = "manager id is not found",
-                    content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class))}
-            ),
-            @ApiResponse(responseCode = "500 Internal Server Error",
-                    description = "Error at backend side",
-                    content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class))}
-            )
-    })
-    public void enableManager(@PathVariable Long managerId) {
-        userService.enableManagerToCreateShop(managerId);
     }
     @Operation(summary = "check if manager is enabled",description = "accessed only by admin")
     @ApiResponses(value = {
@@ -126,5 +88,13 @@ public class UserController {
     @PreAuthorize("hasRole('MANAGER','USER')")
     public void changePassword(@CurrentUser User user, @RequestBody ChangePasswordRequest changePasswordRequest){
         userService.changePassword(user,changePasswordRequest);
+    }
+
+    @GetMapping("/{page}/{size}")
+    @Operation(summary = "get all saved posts from a user")
+    public PagedResponse<PostResponse> getAllSavedPosts(
+            @PathVariable int page ,@PathVariable int size
+            ,@CurrentUser User user){
+        return userService.getAllSavedPosts(page,size,user);
     }
 }

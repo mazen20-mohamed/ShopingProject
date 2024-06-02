@@ -5,6 +5,8 @@ import com.example.productService.comment.dto.CommentResponse;
 import com.example.productService.exception.NotFoundResponseException;
 import com.example.productService.model.auth.User;
 import com.example.productService.model.notification.Notification;
+import com.example.productService.model.notification.NotificationType;
+import com.example.productService.model.notification.UserNotification;
 import com.example.productService.model.post.Comment;
 import com.example.productService.model.post.Post;
 import com.example.productService.notification.service.NotificationService;
@@ -43,7 +45,6 @@ public class CommentService {
                 throw new NotFoundResponseException("There is no parent comment with id "+commentRequest.getCommentParent());
             }
             parentComment = parentCommentOptional.get();
-//          User user1 = parentComment.getUser();
 
         }
 
@@ -60,7 +61,9 @@ public class CommentService {
                 .build();
 
         commentRepository.save(comment);
-
+        if(parentComment !=null){
+            notificationService.generateCommentNotification(user,parentComment,commentRequest);
+        }
     }
 
     public CommentResponse getCommentById(Long commentId){
@@ -71,7 +74,7 @@ public class CommentService {
     public List<CommentResponse> getAllCommentsOfPost(Long postId){
         Post post = postService.getPostByIdCheck(postId);
 
-        return post.getComments().stream().filter(p-> p.getCommentParent() == null).map(
+        return commentRepository.getAllCommentsOfPost(postId).stream().map(
                 ModelMapper::convertCommentDTO
         ).toList();
     }

@@ -1,5 +1,6 @@
 package com.example.productService.util;
 
+import com.example.productService.admin.dto.AppDataResponse;
 import com.example.productService.comment.dto.CommentResponse;
 import com.example.productService.comment.dto.UserType;
 import com.example.productService.model.auth.Role;
@@ -145,6 +146,19 @@ public class ModelMapper {
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .shop_id(user.getOwnShop().getId())
+                .build();
+    }
+    public static AppDataResponse convertData(long noUsers,
+                                              long numberOfShops,
+                                              long numberOfComments,
+                                              long numberOfLikes,
+                                              long numberOfPosts){
+        return AppDataResponse
+                .builder().numberOfUsers(noUsers)
+                .numberOfShops(numberOfShops)
+                .numberOfComments(numberOfComments)
+                .numberOfLikes(numberOfLikes)
+                .numberOfPosts(numberOfPosts)
                 .build();
     }
 }

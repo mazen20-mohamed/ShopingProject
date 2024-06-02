@@ -12,6 +12,7 @@ import com.example.productService.shop.dto.BranchRequest;
 import com.example.productService.shop.dto.ShopRequest;
 import com.example.productService.shop.dto.ShopResponse;
 import com.example.productService.shop.dto.ShopSearchResponse;
+import com.example.productService.users.dto.ManagerInfo;
 import com.example.productService.users.dto.UserInfoResponse;
 import com.example.productService.util.ModelMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -173,9 +174,9 @@ public Long addStoreWithBranches(ShopRequest shopRequest,User user) {
                 branches.getTotalPages(), branches.isLast());
     }
     // done and need to be tested
-    public UserInfoResponse getManagerOfShop(Long id){
+    public ManagerInfo getManagerOfShop(Long id){
         Shop shop = getShopByIdOptional(id);
-        return ModelMapper.convertUserDTO(shop.getManager());
+        return ModelMapper.convertManagerDto(shop.getManager());
     }
 
     // done and tested
@@ -206,28 +207,6 @@ public Long addStoreWithBranches(ShopRequest shopRequest,User user) {
         return new PagedResponse<>(shopResponseList, shopResponses.getNumber(),
                 shopResponses.getSize(), shopResponseList.size(),
                 shopResponses.getTotalPages(), shopResponses.isLast());
-    }
-
-    public PagedResponse<ShopResponse> getAllDisabled(int size,int page){
-        Pageable pageable = PageRequest.of(page,size, Sort.by("createdAt").descending());
-        Page<Shop> shopResponses = shopRepository.findAllDisabledShops(pageable);
-        List<ShopResponse> shopResponseList = shopResponses.getContent().
-                stream().map(ModelMapper::ConvertShopDTO).toList();
-        return new PagedResponse<>(shopResponseList, shopResponses.getNumber(),
-                shopResponses.getSize(), shopResponseList.size(),
-                shopResponses.getTotalPages(), shopResponses.isLast());
-    }
-
-    public void disableShop(Long shopId){
-        Shop shop = getShopByIdOptional(shopId);
-        shop.setEnabled(false);
-        shopRepository.save(shop);
-    }
-
-    public void enableShop(Long shopId){
-        Shop shop = getShopByIdOptional(shopId);
-        shop.setEnabled(true);
-        shopRepository.save(shop);
     }
 
     public void deleteShop(Long shopId){
