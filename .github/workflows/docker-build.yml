@@ -32,4 +32,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: YOUR_DOCKERHUB_USERNAME/spring-demo:latest
+          tags: mazeneldessouky/spring-demo:latest
